@@ -5,9 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class AnimationBus extends StatefulWidget {
-  const AnimationBus({super.key});
+  final Function(String) onBusIconTap;
+
+  const AnimationBus({super.key, required this.onBusIconTap});
 
   @override
+  // ignore: library_private_types_in_public_api
   _AnimationBusState createState() => _AnimationBusState();
 }
 
@@ -77,24 +80,30 @@ class _AnimationBusState extends State<AnimationBus>
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(1.0),
+      padding: const EdgeInsets.all(8.0),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           _buildBusRow('Bus 1', 'images/buss_icon_red.svg',
-              'images/buss_icon2_red.svg', Colors.red, progress[0]),
-          _buildBusRow('Bus 2', 'images/buss_icon_yellow.svg',
-              'images/buss_icon2_yellow.svg', Colors.yellow, progress[1]),
+              'images/buss_icon2_red.svg', Colors.red, progress[0], 'bus1'),
+          _buildBusRow(
+              'Bus 2',
+              'images/buss_icon_yellow.svg',
+              'images/buss_icon2_yellow.svg',
+              Colors.yellow,
+              progress[1],
+              'bus2'),
           _buildBusRow('Bus 3', 'images/buss_icon_blue.svg',
-              'images/buss_icon2_blue.svg', Colors.blue, progress[2]),
+              'images/buss_icon2_blue.svg', Colors.blue, progress[2], 'bus3'),
         ],
       ),
     );
   }
 
   Widget _buildBusRow(String busName, String assetName, String busIcon2,
-      Color color, double progress) {
+      Color color, double progress, String busId) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 0),
+      padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
         children: [
           _buildBusContainer(busName, assetName),
@@ -104,11 +113,14 @@ class _AnimationBusState extends State<AnimationBus>
               children: [
                 _buildBusRoute(color),
                 Positioned(
-                  left: 20 + progress * 160, // Adjust scaling factor as needed
-                  child: SizedBox(
-                    width: 60,
-                    height: 60,
-                    child: SvgPicture.asset(busIcon2),
+                  left: 20 + progress * 160,
+                  child: GestureDetector(
+                    onTap: () => widget.onBusIconTap(busId),
+                    child: SizedBox(
+                      width: 60,
+                      height: 70,
+                      child: SvgPicture.asset(busIcon2),
+                    ),
                   ),
                 ),
               ],

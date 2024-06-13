@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -11,22 +12,29 @@ class Clock extends StatefulWidget {
 
 class _ClockState extends State<Clock> {
   String _clock = 'Clock';
-  // ignore: unused_field
-  late Timer? _timer;
+  late Timer _timer;
 
   @override
   void initState() {
+    super.initState();
     _timer = Timer.periodic(
       const Duration(seconds: 1),
       (timer) {
-        setState(
-          () {
-            _clock = DateFormat('HH:mm:ss').format(DateTime.now());
-          },
-        );
+        if (mounted) {
+          setState(
+            () {
+              _clock = DateFormat('HH:mm:ss').format(DateTime.now());
+            },
+          );
+        }
       },
     );
-    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
   }
 
   @override

@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:monitoring/widget/animation_widget.dart';
 import 'package:monitoring/widget/map_widget.dart';
 import 'package:monitoring/widget/schedule_widget.dart';
@@ -33,6 +34,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
+      title: 'monitoring',
       debugShowCheckedModeBanner: false,
       home: MyHomePage(),
     );
@@ -47,54 +49,103 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  bool showAnimationWidget = false;
+  bool showScheduleWidget = false;
+  GoogleMapController? mapController;
+  Set<Marker> markers = {};
+
+  void _onMapCreated(GoogleMapController controller) {
+    mapController = controller;
+  }
+
+  void _moveCameraToBus(String busId) {
+    if (mapController != null) {
+      final busMarker =
+          markers.firstWhere((marker) => marker.markerId.value == busId);
+      mapController!.animateCamera(CameraUpdate.newLatLng(busMarker.position));
+    } else {
+      if (kDebugMode) {
+        print("Map controller is not initialized.");
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SingleChildScrollView(
-        child: Column(
-          children: <Widget>[
-            Center(
-              child: Container(
-                margin: const EdgeInsets.only(top: 5),
-                decoration: BoxDecoration(
-                  border: Border.all(color: const Color(0xFF0500FF), width: 1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                width: 1910,
-                height: 600,
-                child: const MapScreen(),
-              ),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: <Widget>[
-                Container(
-                  margin: const EdgeInsets.only(top: 5),
-                  width: 947,
-                  height: 340,
-                  decoration: BoxDecoration(
-                    border:
-                        Border.all(color: const Color(0xFF0500FF), width: 2),
-                    borderRadius: BorderRadius.circular(10),
+      body: Stack(
+        children: <Widget>[
+          MapScreen(onMapCreated: _onMapCreated),
+          Positioned(
+            bottom: 10,
+            left: 10,
+            child: Row(
+              children: [
+                const Padding(padding: EdgeInsets.only(right: 100)),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      showAnimationWidget = !showAnimationWidget;
+                      showScheduleWidget = false;
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: Colors.blue,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                  child: const AnimationBus(),
+                  child: const Text('Animation'),
                 ),
-                Container(
-                  margin: const EdgeInsets.only(top: 5),
-                  width: 922,
-                  height: 340,
-                  decoration: BoxDecoration(
-                    border:
-                        Border.all(color: const Color(0xFF0500FF), width: 2),
-                    borderRadius: BorderRadius.circular(10),
+                const SizedBox(width: 10),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      showScheduleWidget = !showScheduleWidget;
+                      showAnimationWidget = false;
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: Colors.blue,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                  child: const ScheduleBus(),
+                  child: const Text('Schedule'),
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+          if (showAnimationWidget)
+            Positioned(
+              top: 50,
+              left: 10,
+              right: 10,
+              child: IntrinsicHeight(
+                child: Container(
+                  color: Colors.white.withOpacity(0.9),
+                  child: AnimationBus(
+                    onBusIconTap: _moveCameraToBus,
+                  ),
+                ),
+              ),
+            ),
+          if (showScheduleWidget)
+            Positioned(
+              top: 50,
+              left: 10,
+              right: 10,
+              child: IntrinsicHeight(
+                child: Container(
+                  color: Colors.white.withOpacity(0.9),
+                  child: const ScheduleBus(),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

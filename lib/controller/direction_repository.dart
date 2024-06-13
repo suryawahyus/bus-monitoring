@@ -45,11 +45,13 @@ class DirectionsRepository {
 
     if (response.statusCode == 200 &&
         response.data['rows'][0]['elements'][0]['status'] == 'OK') {
-      var durationInTraffic =
-          response.data['rows'][0]['elements'][0]['duration_in_traffic'];
+      var element = response.data['rows'][0]['elements'][0];
+      var durationInTraffic = element['duration_in_traffic'];
+      var distance = element['distance'];
       return {
         'duration': durationInTraffic['text'],
-        'duration_value': durationInTraffic['value']
+        'duration_value': durationInTraffic['value'],
+        'distance_value': distance['value']
       };
     } else {
       throw Exception('Failed to fetch ETA');

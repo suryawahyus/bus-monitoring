@@ -1,12 +1,10 @@
-import 'dart:math';
-
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:monitoring/controller/direction_repository.dart';
-import 'package:monitoring/controller/firebase_service.dart';
-import 'package:monitoring/widget/server_time_widget.dart';
+import 'package:monitoring/controller/server_time.dart';
+import 'package:monitoring/firebase/firebase_service.dart';
 
 class ScheduleBus extends StatefulWidget {
   const ScheduleBus({super.key});
@@ -28,15 +26,13 @@ class _ScheduleBusState extends State<ScheduleBus> {
     updateBusData();
   }
 
-  double _coordinateDistance(lat1, lon1, lat2, lon2) {
-    var p = 0.017453292519943295;
-    var c = cos;
-    var a = 0.5 -
-        c((lat2 - lat1) * p) / 2 +
-        c(lat1 * p) * c(lat2 * p) * (1 - c((lon2 - lon1) * p)) / 2;
-    return 12742 * asin(sqrt(a));
-  }
-
+  final TextStyle busInfoStyle = const TextStyle(
+    color: Colors.black,
+    fontSize: 24,
+    fontFamily: 'Inter',
+    fontWeight: FontWeight.w700,
+    height: 0,
+  );
   void updateBusData() {
     firebaseService.getAllBusLocations().listen((allBusLocations) async {
       for (var busLocation in allBusLocations) {
@@ -67,21 +63,22 @@ class _ScheduleBusState extends State<ScheduleBus> {
           int index = int.parse(match.group(1)!);
           String busIndexKey = 'Bus $index';
 
-          double distance = _coordinateDistance(
-            busPosition.latitude,
-            busPosition.longitude,
-            halteBposition.latitude,
-            halteBposition.longitude,
-          );
-
-          // Mendapatkan ETA dari Google Distance Matrix API
+          // Mendapatkan jarak dan ETA dari Google Distance Matrix API
           var etaData = await directionsRepository.getEta(
             origin: busPosition,
             destination: halteBposition,
           );
 
+          if (kDebugMode) {
+            print('ETA data: $etaData');
+          }
+
           double etaMinutes =
               etaData != null ? etaData['duration_value'] / 60 : 0.0;
+          double googleDistance =
+              etaData != null && etaData['distance_value'] != null
+                  ? etaData['distance_value'] / 1000
+                  : 0.0;
 
           setState(() {
             busData.putIfAbsent(
@@ -96,7 +93,7 @@ class _ScheduleBusState extends State<ScheduleBus> {
 
             busData[busIndexKey]!['position'] = busPosition;
             busData[busIndexKey]!['jarak'] =
-                '${distance.toStringAsFixed(2)} km';
+                '${googleDistance.toStringAsFixed(2)} km';
             busData[busIndexKey]!['estimation'] =
                 '${etaMinutes.toStringAsFixed(0)} menit ke halte';
           });
@@ -139,50 +136,60 @@ class _ScheduleBusState extends State<ScheduleBus> {
                   ),
                 ),
                 const Padding(
-                  padding: EdgeInsets.fromLTRB(20, 0, 0, 20),
+                  padding: EdgeInsets.symmetric(vertical: 15, horizontal: 21),
                   child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'Bus',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 24,
-                          fontFamily: 'Inter',
-                          fontWeight: FontWeight.w700,
-                          height: 0,
+                      Flexible(
+                        flex: 1,
+                        child: Text(
+                          'Bus',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 24,
+                            fontFamily: 'Inter',
+                            fontWeight: FontWeight.w700,
+                            height: 0,
+                          ),
                         ),
                       ),
-                      SizedBox(width: 120),
-                      Text(
-                        'Sampai ke halte',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 24,
-                          fontFamily: 'Inter',
-                          fontWeight: FontWeight.w700,
-                          height: 0,
+                      Flexible(
+                        flex: 1,
+                        child: Text(
+                          'Sampai ke halte',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 24,
+                            fontFamily: 'Inter',
+                            fontWeight: FontWeight.w700,
+                            height: 0,
+                          ),
                         ),
                       ),
-                      SizedBox(width: 120),
-                      Text(
-                        'Jarak',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 24,
-                          fontFamily: 'Inter',
-                          fontWeight: FontWeight.w700,
-                          height: 0,
+                      Flexible(
+                        flex: 1,
+                        child: Text(
+                          'Jarak',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 24,
+                            fontFamily: 'Inter',
+                            fontWeight: FontWeight.w700,
+                            height: 0,
+                          ),
                         ),
                       ),
-                      SizedBox(width: 120),
-                      Text(
-                        'Estimasi Kedatangan',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 24,
-                          fontFamily: 'Inter',
-                          fontWeight: FontWeight.w700,
-                          height: 0,
+                      Flexible(
+                        flex: 1,
+                        child: Text(
+                          'Estimasi Kedatangan',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 24,
+                            fontFamily: 'Inter',
+                            fontWeight: FontWeight.w700,
+                            height: 0,
+                          ),
                         ),
                       ),
                     ],
@@ -215,12 +222,4 @@ class _ScheduleBusState extends State<ScheduleBus> {
       ),
     );
   }
-
-  final TextStyle busInfoStyle = const TextStyle(
-    color: Colors.black,
-    fontSize: 24,
-    fontFamily: 'Inter',
-    fontWeight: FontWeight.w700,
-    height: 0,
-  );
 }

@@ -4,10 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:monitoring/controller/direction_repository.dart';
-import 'package:monitoring/controller/firebase_service.dart';
+import 'package:monitoring/firebase/firebase_service.dart';
 
 class MapScreen extends StatefulWidget {
-  const MapScreen({super.key});
+  const MapScreen(
+      {super.key,
+      required void Function(GoogleMapController controller) onMapCreated});
 
   @override
   State<MapScreen> createState() => _MapScreenState();
@@ -87,7 +89,7 @@ class _MapScreenState extends State<MapScreen> {
 
   Future<void> setCustomMarkerIcon() async {
     const ImageConfiguration config =
-        ImageConfiguration(size: Size(40.0, 40.0));
+        ImageConfiguration(size: Size(50.0, 50.0));
     halteIconA = await BitmapDescriptor.fromAssetImage(
         config, "images/icon_halte_A.png");
     halteIconB = await BitmapDescriptor.fromAssetImage(
@@ -126,11 +128,13 @@ class _MapScreenState extends State<MapScreen> {
           default:
             icon = halteIcon;
         }
-        newMarkers.add(Marker(
-          markerId: MarkerId(bus['busId']),
-          icon: icon,
-          position: position,
-        ));
+        newMarkers.add(
+          Marker(
+            markerId: MarkerId(bus['busId']),
+            icon: icon,
+            position: position,
+          ),
+        );
       }
     }
 
