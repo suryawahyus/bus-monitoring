@@ -10,7 +10,6 @@ class AnimationBus extends StatefulWidget {
   const AnimationBus({super.key, required this.onBusIconTap});
 
   @override
-  // ignore: library_private_types_in_public_api
   _AnimationBusState createState() => _AnimationBusState();
 }
 
